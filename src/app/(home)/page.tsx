@@ -8,8 +8,6 @@ export default function Home() {
 
 
   return (
-  <Typography variant="h5" gutterBottom>
-    Domovská stranka
-  </Typography>
+  <Typography>Domovská stranka</Typography>
   );
-}
+} 

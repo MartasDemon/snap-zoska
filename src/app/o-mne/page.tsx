@@ -4,7 +4,7 @@ import Container from '@mui/material/Container';
 
 export const metadata = { title: "O-mne| ZoskaSnap"}
 
-export default function Home() {
+export default function AboutMe() {
 
   return (
     <Container>
