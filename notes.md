@@ -1,18 +1,33 @@
-NEXT.js
-ls -  vypis directories
-cd -change directory
-cd.. -change directory vysie
-npm run dev- spusta kod
-npm run build(vzdy pred commitom)
+npx create-next-app@latest
+Inštalácia NextJS cez terminál (npx = node package execute)
 
-						prepojenie gitu s projektom
+ls # linux, vypíše obsah dir (list)
+
+cd
+linux, presmeruje do dir (change directory)
+
+cd .. # o úroveň vyššie
+
+npm run dev
+spustí kód cez terminál
+
 git init
+inicializovanie git v projekte
+
 git branch -m main
-git config --global user.name "Martin"
-git config --global user.email "matomihalik223@gmail.com"
-git remote add origin https://github.com/MartasDemon/apka.git
-git remote -v
-git add .
-Page.tsx
-Homepage msui byt v priecinku app a v podpriecinku ohraniceneho zatvorkami ktore neexistuje ignoruje.stranka sa musi vzdy volat page.tsx
-takze ked prepiname podstranku tak ju volame podla priecinku v ktorom page.tsx je
+spraví main branch na githube
+
+git config –global user.name/user.email
+
+git remote add origin url
+prepojí git s githubom
+
+git remote -v # skontroluje prepojenie
+
+NextJS – files stránkok sa musia volať page.tsx, ak nie je v app dir, tak musí byť v dir, ktorý ma meno v () globals.css musí existovať
+
+not-found.tsx musí byť v app dir, overridene defaultnu page 404
+
+find . -path './.next' -prune -o -path './node_modules' -prune -o -path './.git' -prune -o -print | sed -e "s/[^\/]*// |/g" -e "s/|([^ ])/|-\1/"
+
+^vypise vsetky folders a files okrem .next, node_modules, .git
