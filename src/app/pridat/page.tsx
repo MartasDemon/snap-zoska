@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 
 export const metadata = { title: "Pridat Prispevok| ZoškaSnap"}
 
-export default function Add() {
+export default function AddPost() {
 
 
   return (

@@ -43,7 +43,7 @@ export default function SimpleBottomNavigation() {
         <BottomNavigationAction 
           label="Pridať príspevok" 
           icon={<AddCircleIcon />} 
-          onClick={() => router.push('/pridat')}  // Navigate to add profile
+          onClick={() => router.push('/prispevok')}  // Navigate to add profile
         />
         
         {/* Logout Action */}

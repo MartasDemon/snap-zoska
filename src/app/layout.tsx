@@ -5,7 +5,7 @@ import SimpleBottomNavigation from "../components/NavBar"; // Import the Bottom 
 
 export const metadata: Metadata = {
   title: "SnapZoska",
-  description: "Created by student Adam Tomcik",
+  description: "Created by student Martin Mihalik",
 };
 
 export default function RootLayout({
