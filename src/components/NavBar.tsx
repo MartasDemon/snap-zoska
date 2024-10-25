@@ -14,7 +14,7 @@ import { useSession, signOut, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession(); // Removed status and just use session
   const router = useRouter();
 
   return (
@@ -25,8 +25,7 @@ export default function Navbar() {
       <BottomNavigationAction label="Domov" icon={<HomeIcon />} onClick={() => router.push('/')} />
       <BottomNavigationAction label="Príspevky" icon={<PostAddIcon />} onClick={() => router.push('/prispevok')} />
 
-
-      {status === "authenticated" ? (
+      {session ? (  // Check if session exists
         <>
           <BottomNavigationAction label="Hľadať" icon={<SearchIcon />} onClick={() => router.push('/hladat')} />
           <BottomNavigationAction label="Profil" icon={<PersonIcon />} onClick={() => router.push('/profil')} />
