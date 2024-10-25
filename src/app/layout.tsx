@@ -1,11 +1,13 @@
 // src/app/layout.tsx
-import type { Metadata } from "next";
+
+import { Metadata } from "next";
 import "./globals.css";
-import SimpleBottomNavigation from "../components/NavBar"; // Import the Bottom Navigation
+import Navbar from "@/components/NavBar";
+import AuthProvider from "../components/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "SnapZoska",
-  description: "Created by student Martin Mihalik",
+  title: "SnapZoška",
+  description: "Martin Mihálik",
 };
 
 export default function RootLayout({
@@ -16,8 +18,14 @@ export default function RootLayout({
   return (
     <html lang="sk">
       <body>
-        {children}
-        <SimpleBottomNavigation /> {/* Add Bottom Navigation here */}
+        <AuthProvider>
+          <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <main style={{ flexGrow: 1 }}>
+              {children}
+            </main>
+          </div>
+          <Navbar /> 
+        </AuthProvider>
       </body>
     </html>
   );
