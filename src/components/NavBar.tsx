@@ -1,42 +1,107 @@
 "use client";
 
 import * as React from 'react';
+import { getSession, signOut } from 'next-auth/react';
+import Box from '@mui/material/Box';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import HomeIcon from '@mui/icons-material/Home';
-import SearchIcon from '@mui/icons-material/Search'; 
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import LoginIcon from '@mui/icons-material/Login';
-import LogoutIcon from '@mui/icons-material/Logout';
-import PersonIcon from '@mui/icons-material/Person';
-import PostAddIcon from '@mui/icons-material/PostAdd'; 
-import { useSession, signOut, signIn } from 'next-auth/react';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import { useRouter } from 'next/navigation';
+import { Session } from 'next-auth';
 
-export default function Navbar() {
-  const { data: session } = useSession(); // Removed status and just use session
+export default function SimpleBottomNavigation() {
+  const [value, setValue] = React.useState(0);
+  const [session, setSession] = React.useState<Session | null>(null);
   const router = useRouter();
 
-  return (
-    <BottomNavigation
-      showLabels
-      style={{ position: 'fixed', bottom: 0, width: '100%', backgroundColor: 'white' }}
-    >
-      <BottomNavigationAction label="Domov" icon={<HomeIcon />} onClick={() => router.push('/')} />
-      <BottomNavigationAction label="Príspevky" icon={<PostAddIcon />} onClick={() => router.push('/prispevok')} />
+  // Fetch session on component mount
+  React.useEffect(() => {
+    getSession().then(setSession);
+  }, []);
 
-      {session ? (  // Check if session exists
-        <>
-          <BottomNavigationAction label="Hľadať" icon={<SearchIcon />} onClick={() => router.push('/hladat')} />
-          <BottomNavigationAction label="Profil" icon={<PersonIcon />} onClick={() => router.push('/profil')} />
-          <BottomNavigationAction label="Odhlásiť sa" icon={<LogoutIcon />} onClick={() => signOut()} />
-        </>
-      ) : (
-        <>
-          <BottomNavigationAction label="Registrovať sa" icon={<PersonAddIcon />} onClick={() => router.push('/auth/prihlasenie')} />
-          <BottomNavigationAction label="Prihlásiť sa" icon={<LoginIcon />} onClick={() => signIn()} />
-        </>
-      )}
-    </BottomNavigation>
+  return (
+    <Box sx={{ width: '100%', position: 'fixed', bottom: 0 }}>
+      <BottomNavigation
+        value={value}
+        onChange={(event, newValue) => {
+          setValue(newValue);
+        }}
+      >
+        {/* Home Action */}
+        <BottomNavigationAction 
+          label="Domov" 
+          icon={<HomeIcon />} 
+          showLabel={true} // Explicitly show label
+          onClick={() => router.push('/')} 
+        />
+
+        {session ? (
+          <>
+            {/* Profile Action */}
+            <BottomNavigationAction 
+              label={`Profil (${session.user?.name})`} 
+              icon={<AccountCircleIcon />} 
+              showLabel={true} // Explicitly show label
+              onClick={() => router.push('/profil')} 
+            />
+
+            {/* Add Post Action */}
+            <BottomNavigationAction 
+              label="Pridať príspevok" 
+              icon={<AddCircleIcon />} 
+              showLabel={true} // Explicitly show label
+              onClick={() => router.push('/prispevok')} 
+            />
+
+            {/* Notifications Action */}
+            <BottomNavigationAction 
+              label="Notifikácie" 
+              icon={<NotificationsIcon />} 
+              showLabel={true} // Explicitly show label
+              onClick={() => router.push('/notifikacie')} 
+            />
+
+            {/* Logout Action */}
+            <BottomNavigationAction 
+              label="Odhlásiť sa" 
+              icon={<ExitToAppIcon />} 
+              showLabel={true} // Explicitly show label
+              onClick={() => signOut()} 
+            />
+          </>
+        ) : (
+          <>
+            {/* Posts Action */}
+            <BottomNavigationAction 
+              label="Príspevky" 
+              icon={<AddCircleIcon />} 
+              showLabel={true} // Explicitly show label
+              onClick={() => router.push('/prispevok')} 
+            />
+
+            {/* Login Action */}
+            <BottomNavigationAction 
+              label="Prihlásenie" 
+              icon={<ExitToAppIcon />} 
+              showLabel={true} // Explicitly show label
+              onClick={() => router.push('/auth/prihlasenie')} 
+            />
+
+            {/* Registration Action */}
+            <BottomNavigationAction 
+              label="Registrácia" 
+              icon={<AppRegistrationIcon />} 
+              showLabel={true} // Explicitly show label
+              onClick={() => router.push('/auth/registracia')} 
+            />
+          </>
+        )}
+      </BottomNavigation>
+    </Box>
   );
 }
