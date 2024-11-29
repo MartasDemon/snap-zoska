@@ -1,7 +1,7 @@
-// src/app/layout.tsx
 import type { Metadata } from "next";
 import "./globals.css";
 import SimpleBottomNavigation from "../components/NavBar"; // Import the Bottom Navigation
+import AuthProvider from "../components/AuthProvider"; // Import your custom AuthProvider
 
 export const metadata: Metadata = {
   title: "SnapZoska",
@@ -16,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="sk">
       <body>
-        {children}
-        <SimpleBottomNavigation /> {/* Add Bottom Navigation here */}
+        <AuthProvider>
+          {children}
+          <SimpleBottomNavigation /> {/* Add Bottom Navigation here */}
+        </AuthProvider>
       </body>
     </html>
   );
