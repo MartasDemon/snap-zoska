@@ -36,7 +36,7 @@ export default function SimpleBottomNavigation() {
         <BottomNavigationAction 
           label="Domov" 
           icon={<HomeIcon />} 
-          showLabel={true} // Explicitly show label
+          showLabel={true} 
           onClick={() => router.push('/')} 
         />
 
@@ -46,7 +46,7 @@ export default function SimpleBottomNavigation() {
             <BottomNavigationAction 
               label={`Profil (${session.user?.name})`} 
               icon={<AccountCircleIcon />} 
-              showLabel={true} // Explicitly show label
+              showLabel={true} 
               onClick={() => router.push('/profil')} 
             />
 
@@ -54,7 +54,7 @@ export default function SimpleBottomNavigation() {
             <BottomNavigationAction 
               label="Pridať príspevok" 
               icon={<AddCircleIcon />} 
-              showLabel={true} // Explicitly show label
+              showLabel={true} 
               onClick={() => router.push('/prispevok')} 
             />
 
@@ -62,7 +62,7 @@ export default function SimpleBottomNavigation() {
             <BottomNavigationAction 
               label="Notifikácie" 
               icon={<NotificationsIcon />} 
-              showLabel={true} // Explicitly show label
+              showLabel={true} 
               onClick={() => router.push('/notifikacie')} 
             />
 
@@ -70,33 +70,49 @@ export default function SimpleBottomNavigation() {
             <BottomNavigationAction 
               label="Odhlásiť sa" 
               icon={<ExitToAppIcon />} 
-              showLabel={true} // Explicitly show label
+              showLabel={true} 
               onClick={() => signOut()} 
             />
           </>
         ) : (
           <>
-            {/* Posts Action */}
+            {/* GDPR Action */}
             <BottomNavigationAction 
-              label="Príspevky" 
-              icon={<AddCircleIcon />} 
-              showLabel={true} // Explicitly show label
-              onClick={() => router.push('/prispevok')} 
+              label="GDPR" 
+              icon={<HomeIcon />} 
+              showLabel={true} 
+              onClick={() => router.push('/gdpr')} 
+            />
+
+            {/* About Me (O Mne) Action */}
+            <BottomNavigationAction 
+              label="O Mne" 
+              icon={<HomeIcon />} 
+              showLabel={true} 
+              onClick={() => router.push('/o-mne')} 
+            />
+
+            {/* Terms & Conditions (Podmienky) Action */}
+            <BottomNavigationAction 
+              label="Podmienky" 
+              icon={<HomeIcon />} 
+              showLabel={true} 
+              onClick={() => router.push('/podmienky')} 
             />
 
             {/* Login Action */}
             <BottomNavigationAction 
-              label="Prihlásenie" 
+              label="Prihlásiť sa" 
               icon={<ExitToAppIcon />} 
-              showLabel={true} // Explicitly show label
+              showLabel={true} 
               onClick={() => router.push('/auth/prihlasenie')} 
             />
 
-            {/* Registration Action */}
+            {/* Register Action */}
             <BottomNavigationAction 
-              label="Registrácia" 
+              label="Registrovať sa" 
               icon={<AppRegistrationIcon />} 
-              showLabel={true} // Explicitly show label
+              showLabel={true} 
               onClick={() => router.push('/auth/registracia')} 
             />
           </>
