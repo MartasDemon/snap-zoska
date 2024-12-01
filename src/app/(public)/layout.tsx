@@ -1,6 +1,6 @@
 // src/app/(public)/layout.tsx
 
-export const metadata = { title: "Public | SnapZoška" };
+export const metadata = { title: "Verejné | SnapZoška" };
 
 export default function PublicLayout({
   children,
