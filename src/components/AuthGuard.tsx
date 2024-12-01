@@ -1,16 +1,15 @@
-// src/components/AuthGuard.tsx
 "use client";
 
 import { useSession } from "next-auth/react";
 import { useEffect, ReactNode, useState } from "react";
-import { useRouter } from "next/navigation"; // If you prefer using useRouter for redirection
+import { useRouter } from "next/navigation";
 
 interface AuthGuardProps {
   children: ReactNode;
 }
 
 const AuthGuard = ({ children }: AuthGuardProps) => {
-  const { data: session, status } = useSession();
+  const { status } = useSession(); // Removed unused session
   const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
 
@@ -28,5 +27,4 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
 
   return <>{children}</>;
 };
-
 export default AuthGuard;
