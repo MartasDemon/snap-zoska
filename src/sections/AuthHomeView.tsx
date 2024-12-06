@@ -1,21 +1,22 @@
-// src/sections/AuthHomeView.tsx
+"use client";
 
-import Container from "@mui/material/Container";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Typography from "@mui/material/Typography";
 import { Session } from "next-auth";
 
 export default function AuthHomeView({ session }: { session: Session | null }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (session) {
+      router.push("/prispevok");
+    }
+  }, [session, router]);
+
   if (!session) {
     return <Typography>Loading...</Typography>;
   }
 
-  return (
-    <Container>
-      <Typography> Domovská stránka - prihlásený user</Typography>
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        Vitajte, {session?.user?.name || "užívateľ"}!
-      </Typography>
-    </Container>
-  );
+  return null; // Optionally show nothing if redirecting
 }
-
