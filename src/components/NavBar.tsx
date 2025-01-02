@@ -13,11 +13,13 @@ import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { useRouter, usePathname } from "next/navigation";
 import { Session } from "next-auth";
+import { useThemeContext } from "./ThemeProvider";
 
 export default function SimpleBottomNavigation() {
   const [session, setSession] = React.useState<Session | null>(null);
   const router = useRouter();
-  const pathname = usePathname(); // Get the current route
+  const pathname = usePathname();
+  const { toggleTheme } = useThemeContext(); // Use theme toggler from ThemeProvider
 
   const links = session
     ? [
@@ -26,6 +28,7 @@ export default function SimpleBottomNavigation() {
         { label: "Pridať príspevok", icon: <AddCircleIcon />, path: "/pridat" },
         { label: "Notifikácie", icon: <NotificationsIcon />, path: "/notifikacie" },
         { label: "Odhlásiť sa", icon: <ExitToAppIcon />, action: () => signOut() },
+        { label: "Zmeniť tému", icon: <HomeIcon />, action: toggleTheme }, // Theme toggler
       ]
     : [
         { label: "Domov", icon: <HomeIcon />, path: "/" },
@@ -34,6 +37,7 @@ export default function SimpleBottomNavigation() {
         { label: "Podmienky", icon: <HomeIcon />, path: "/podmienky" },
         { label: "Prihlásiť sa", icon: <ExitToAppIcon />, path: "/auth/prihlasenie" },
         { label: "Registrovať sa", icon: <AppRegistrationIcon />, path: "/auth/registracia" },
+        { label: "Zmeniť tému", icon: <HomeIcon />, action: toggleTheme }, // Theme toggler
       ];
 
   // Fetch session on component mount
