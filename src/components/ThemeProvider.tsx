@@ -1,9 +1,7 @@
-//src\components\ThemeProvider.tsx
 "use client";
 
-import React, { createContext, useState, useMemo, useContext } from "react";
+import React, { createContext, useState, useMemo, useContext, useEffect } from "react";
 import { ThemeProvider as MuiThemeProvider, createTheme, CssBaseline, GlobalStyles } from "@mui/material";
-
 
 const ThemeContext = createContext({
   toggleTheme: () => {},
@@ -13,11 +11,21 @@ const ThemeContext = createContext({
 export const useThemeContext = () => useContext(ThemeContext);
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<"light" | "dark">("light");
+  const [mode, setMode] = useState<"light" | "dark">(
+    () => (localStorage.getItem("themeMode") as "light" | "dark") || "light"
+  );
 
   const toggleTheme = () => {
-    setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
+    setMode((prevMode) => {
+      const newMode = prevMode === "light" ? "dark" : "light";
+      localStorage.setItem("themeMode", newMode);
+      return newMode;
+    });
   };
+
+  useEffect(() => {
+    localStorage.setItem("themeMode", mode);
+  }, [mode]);
 
   const theme = useMemo(
     () =>
