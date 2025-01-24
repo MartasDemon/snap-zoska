@@ -1,11 +1,10 @@
-// src/app/prispevok/page.tsx
+// /src/app/(private)/prispevok/page.tsx
 
-import Typography from '@mui/material/Typography';
+import PostsView from "@/prispevok/PostsView";
 
-export const metadata = {title:"Zoznam prispevkov ZoskaSnap "};
+export const metadata = { title: "Príspevky | ZoškaSnap" };
 
-export default function PostList() {
-  return (
-    <Typography>Zoznam prispevkov</Typography>
-  );
-}
+// Search Page
+const PostsPage = () => <PostsView />;
+
+export default PostsPage;
