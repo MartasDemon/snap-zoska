@@ -1,25 +1,58 @@
 // src/app/page.tsx
+// src/app/(home)/page.tsx
+
+// Next.js imports
+import { redirect } from "next/navigation";
+
+// NextAuth imports
 import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/authOptions";
-import AuthHomeView from "@/sections/AuthHomeView";
+import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
+
+// Custom imports
 import NonAuthHomeView from "@/sections/NonAuthHomeView";
 
 export const metadata = { title: "Domov | ZoškaSnap" };
 
-export default async function HomePage() {
-  try {
-    const session = await getServerSession(authOptions);
+// HomePage Component
+const HomePage = async () => {
+  // Fetch session on the server
+  const session = await getServerSession(authOptions);
 
-    if (!session) {
-      return <NonAuthHomeView />;
-    }
-
-    return <AuthHomeView session={session} />;
-  } catch (error) {
-    console.error("Error fetching session:", error);
-    return <NonAuthHomeView />;
+  if (session) {
+    // Redirect authenticated users to the feed page
+    redirect("/prispevok");
   }
-}
+
+  // Render the unauthenticated home view for non-authenticated users
+  return <NonAuthHomeView />;
+};
+
+export default HomePage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

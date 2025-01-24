@@ -11,21 +11,27 @@ const ThemeContext = createContext({
 export const useThemeContext = () => useContext(ThemeContext);
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<"light" | "dark">(
-    () => (localStorage.getItem("themeMode") as "light" | "dark") || "light"
-  );
+  const [mode, setMode] = useState<"light" | "dark">("light");
+  const [isClient, setIsClient] = useState(false); // State to track client-side rendering
+
+  // Only run this effect in the client-side environment
+  useEffect(() => {
+    setIsClient(true); // Set client-side flag to true after mounting on the client
+    const savedMode = localStorage.getItem("themeMode") as "light" | "dark";
+    if (savedMode) {
+      setMode(savedMode);
+    }
+  }, []);
 
   const toggleTheme = () => {
     setMode((prevMode) => {
       const newMode = prevMode === "light" ? "dark" : "light";
-      localStorage.setItem("themeMode", newMode);
+      if (isClient) { // Make sure localStorage is accessed only on the client-side
+        localStorage.setItem("themeMode", newMode);
+      }
       return newMode;
     });
   };
-
-  useEffect(() => {
-    localStorage.setItem("themeMode", mode);
-  }, [mode]);
 
   const theme = useMemo(
     () =>
@@ -42,6 +48,11 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
       }),
     [mode]
   );
+
+  // Render nothing if it's SSR (server-side rendering)
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={{ toggleTheme, mode }}>
