@@ -1,5 +1,3 @@
-// src/sections/SignUpView.tsx
-
 'use client';
 
 import React, { useState } from 'react';
@@ -13,6 +11,7 @@ import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Link from '@mui/material/Link';
+import GoogleIcon from '@mui/icons-material/Google';
 
 export default function SignUpView() {
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -20,7 +19,7 @@ export default function SignUpView() {
 
   const handleSignUp = async () => {
     if (!acceptTerms) {
-      alert('Please accept the terms and conditions to proceed.');
+      alert('Prosim akceptujte podmienky a GDPR');
       return; // Exit the function if terms are not accepted
     }
 
@@ -49,19 +48,11 @@ export default function SignUpView() {
         }}
       >
         <CardContent sx={{ textAlign: 'center' }}>
-          <Typography
-            variant="h4"
-            gutterBottom
-            sx={{ color: 'text.primary' }}
-          >
+          <Typography variant="h4" gutterBottom sx={{ color: 'text.primary' }}>
             Registrácia
           </Typography>
-          <Typography
-            variant="body1"
-            gutterBottom
-            sx={{ color: 'text.secondary' }}
-          >
-            Please sign up using your Google account.
+          <Typography variant="body1" gutterBottom sx={{ color: 'text.secondary' }}>
+            Prosim registrujte sa svojim google uctom
           </Typography>
           <FormControlLabel
             control={
@@ -73,34 +64,41 @@ export default function SignUpView() {
             }
             label={
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                I accept the{' '}
-                <Link href="/podmienky" color="primary">
-                  Terms of Service
+                Akceptujem{' '}
+                <Link href="/podmienky" sx={{ color: 'blue', fontWeight: 'bold' }}>
+                  Podmienky
                 </Link>{' '}
-                and{' '}
-                <Link href="/gdpr" color="primary">
-                  GDPR Policy
+                a{' '}
+                <Link href="/gdpr" sx={{ color: 'blue', fontWeight: 'bold' }}>
+                  gdpr
                 </Link>
               </Typography>
             }
-            sx={{ marginTop: 2, marginBottom: 2 }}
+            sx={{
+              marginTop: 2,
+              marginBottom: 2,
+              display: 'flex',
+              alignItems: 'center', // Align checkbox and text vertically
+              justifyContent: 'center',
+            }}
           />
           <Button
-            variant="outlined" // Outlined button style
-            color="primary"
+            variant="outlined"
+            fullWidth
+            startIcon={<GoogleIcon />}
             onClick={handleSignUp}
             sx={{
-              marginTop: '20px',
-              borderColor: '#ff0000', // Red border
-              color: '#ff0000', // Red text
+              mt: 2,
+              color: 'red',
+              borderColor: 'red',
+              height: '48px', // Same height as the sign-in button
               '&:hover': {
-                bgcolor: 'transparent', // No background on hover
-                borderColor: '#cc0000', // Darker red border on hover
-                color: '#cc0000', // Darker red text on hover
+                bgcolor: 'rgba(255, 0, 0, 0.1)',
+                borderColor: 'red',
               },
             }}
           >
-            Register with Google
+            Registrujte sa účtom Google
           </Button>
         </CardContent>
       </Card>

@@ -13,7 +13,6 @@ import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import Brightness7Icon from "@mui/icons-material/Brightness7"; // Sun icon
 import Brightness3Icon from "@mui/icons-material/Brightness3"; // Moon icon
-import GavelIcon from "@mui/icons-material/Gavel"; // GDPR icon
 import InfoIcon from "@mui/icons-material/Info"; // About icon
 import { useRouter, usePathname } from "next/navigation";
 import { useThemeContext } from "./ThemeProvider";
@@ -35,9 +34,7 @@ export default function SimpleBottomNavigation() {
       ]
     : [
         { label: "Domov", icon: <HomeIcon />, path: "/" },
-        { label: "GDPR", icon: <GavelIcon />, path: "/gdpr" },
         { label: "O Mne", icon: <InfoIcon />, path: "/o-mne" },
-        { label: "Podmienky", icon: <InfoIcon />, path: "/podmienky" },
         { label: "Prihlásiť sa", icon: <ExitToAppIcon />, path: "/auth/prihlasenie" },
         { label: "Registrovať sa", icon: <AppRegistrationIcon />, path: "/auth/registracia" },
       ];
