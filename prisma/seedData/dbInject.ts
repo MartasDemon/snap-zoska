@@ -21,8 +21,8 @@ async function seed() {
         email: item.email,
         emailVerified: item.emailVerified,
         image: item.image,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt
+        updatedAt: new Date(item.updatedAt),
+        createdAt: new Date()
       }
     });
 
@@ -35,9 +35,9 @@ async function seed() {
           bio: item.profile.bio,
           avatarUrl: item.profile.avatarUrl,
           location: item.profile.location,
-          interests: item.profile.interests,
-          createdAt: item.profile.createdAt,
-          updatedAt: item.profile.updatedAt
+          interests: item.profile.interests || [],
+          updatedAt: new Date(item.profile.updatedAt),
+          createdAt: new Date()
         }
       });
     }
@@ -50,8 +50,8 @@ async function seed() {
           userId: p.userId,
           imageUrl: p.imageUrl,
           caption: p.caption,
-          createdAt: p.createdAt,
-          updatedAt: p.updatedAt
+          updatedAt: new Date(p.updatedAt),
+          createdAt: new Date()
         }))
       });
     }

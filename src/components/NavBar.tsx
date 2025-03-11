@@ -6,31 +6,74 @@ import Box from "@mui/material/Box";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import HomeIcon from "@mui/icons-material/Home";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import Brightness7Icon from "@mui/icons-material/Brightness7"; // Sun icon
-import Brightness3Icon from "@mui/icons-material/Brightness3"; // Moon icon
-import InfoIcon from "@mui/icons-material/Info"; // About icon
+import Brightness7Icon from "@mui/icons-material/Brightness7";
+import Brightness3Icon from "@mui/icons-material/Brightness3";
+import InfoIcon from "@mui/icons-material/Info";
+import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
+import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Avatar from "@mui/material/Avatar";
 import { useRouter, usePathname } from "next/navigation";
 import { useThemeContext } from "./ThemeProvider";
 import { Session } from "next-auth";
 
 export default function SimpleBottomNavigation() {
   const [session, setSession] = useState<Session | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { toggleTheme, mode } = useThemeContext();
 
+  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfileNav = () => {
+    router.push("/profil");
+    handleClose();
+  };
+
+  const handleSignOut = () => {
+    signOut();
+    handleClose();
+  };
+
+  useEffect(() => {
+    const loadSession = async () => {
+      const userSession = await getSession();
+      setSession(userSession);
+      console.log("User session:", userSession);
+    };
+    loadSession();
+  }, []);
+
   const links = session
     ? [
         { label: "Domov", icon: <HomeIcon />, path: "/prispevok" },
-        { label: `Profil (${session.user?.name})`, icon: <AccountCircleIcon />, path: "/profil" },
         { label: "Pridať príspevok", icon: <AddCircleIcon />, path: "/pridat" },
         { label: "Notifikácie", icon: <NotificationsIcon />, path: "/notifikacie" },
-        { label: "Odhlásiť sa", icon: <ExitToAppIcon />, action: () => signOut() },
+        {
+          label: session.user?.name || "Profil",
+          icon: (
+            <Avatar
+              src={session.user?.image || undefined}
+              alt={session.user?.name || "Profile"}
+              sx={{ width: 24, height: 24, cursor: 'pointer' }}
+              onClick={(e: React.MouseEvent<HTMLElement>) => {
+                e.stopPropagation();
+                handleProfileClick(e);
+              }}
+            />
+          ),
+          path: "#"
+        },
       ]
     : [
         { label: "Domov", icon: <HomeIcon />, path: "/" },
@@ -38,10 +81,6 @@ export default function SimpleBottomNavigation() {
         { label: "Prihlásiť sa", icon: <ExitToAppIcon />, path: "/auth/prihlasenie" },
         { label: "Registrovať sa", icon: <AppRegistrationIcon />, path: "/auth/registracia" },
       ];
-
-  useEffect(() => {
-    getSession().then(setSession);
-  }, []);
 
   const activeIndex = links.findIndex((link) => link.path === pathname);
 
@@ -55,7 +94,7 @@ export default function SimpleBottomNavigation() {
         zIndex: 1300,
         boxShadow: mode === "dark" ? "0px -2px 5px rgba(0, 0, 0, 0.3)" : "0px -2px 5px rgba(0, 0, 0, 0.1)",
         display: "flex",
-        justifyContent: "space-between", // Space between icons and the theme button
+        justifyContent: "space-between",
         alignItems: "center",
       }}
     >
@@ -63,17 +102,15 @@ export default function SimpleBottomNavigation() {
         value={activeIndex >= 0 ? activeIndex : 0}
         onChange={(event, newValue) => {
           const link = links[newValue];
-          if (link.action) {
-            link.action();
-          } else if (link.path) {
+          if (link.path) {
             router.push(link.path);
           }
         }}
         sx={{
           backgroundColor: "transparent",
           flex: 1,
-          display: "flex", // Ensure all icons are in one line// Tighter spacing between icons
-          gap: 5
+          display: "flex",
+          gap: 5,
         }}
       >
         {links.map((link, index) => (
@@ -83,7 +120,7 @@ export default function SimpleBottomNavigation() {
             icon={link.icon}
             showLabel={true}
             sx={{
-              color: activeIndex === index ? "#ff0000" : "#666666", // Selected: Red, Default: Gray
+              color: activeIndex === index ? "#ff0000" : "#666666",
               "&.Mui-selected": {
                 color: "#ff0000",
               },
@@ -92,23 +129,31 @@ export default function SimpleBottomNavigation() {
         ))}
       </BottomNavigation>
 
-      {/* Theme Toggle Button */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "0 0px", // Reduce padding around the button
-          flexShrink: 0, // Prevent the button from taking up excessive space
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
         }}
       >
+        <MenuItem onClick={handleProfileNav}>Zobraziť profil</MenuItem>
+        <MenuItem onClick={handleSignOut}>Odhlásiť sa</MenuItem>
+      </Menu>
+
+      <Box sx={{ pr: 1 }}>
         <BottomNavigationAction
           label="Zmeniť tému"
           icon={mode === "dark" ? <Brightness7Icon /> : <Brightness3Icon />}
           onClick={toggleTheme}
           sx={{
-            color: mode === "dark" ? "#ffffff" : "#000000", // White in dark mode, black in light mode
-            minWidth: "48px", // Set a fixed width for the button
+            color: mode === "dark" ? "#ffffff" : "#000000",
+            minWidth: "48px",
           }}
         />
       </Box>
