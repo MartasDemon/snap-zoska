@@ -1,13 +1,31 @@
 // src/app/profil/page.tsx
-import Typography from '@mui/material/Typography';
+"use client";
 
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { CircularProgress, Container, Typography } from '@mui/material';
 
-export const metadata = { title: "Zoznam Profilov| ZoškaSnap"}
+export default function ProfilePage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-export default function Profilelist() {
+  useEffect(() => {
+    if (status === 'loading') return;
 
+    if (session?.user && 'id' in session.user) {
+      // Redirect to the user's profile page
+      router.push(`/profil/${session.user.id}`);
+    } else if (status === 'unauthenticated') {
+      // Redirect to login if not authenticated
+      router.push('/auth/prihlasenie');
+    }
+  }, [session, status, router]);
 
+  // Show loading while checking session
   return (
-  <Typography>Zoznam Profilov</Typography>
+    <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '70vh' }}>
+      <CircularProgress />
+    </Container>
   );
 } 

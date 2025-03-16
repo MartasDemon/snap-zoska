@@ -1,48 +1,27 @@
 "use client";
 
-// React imports
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { Box, Card, CardContent, CardMedia, Typography, IconButton, Avatar, CardHeader, CardActions, Skeleton, Button, Container, Grid } from '@mui/material';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import { fetchPosts, toggleLike, checkLikedPosts } from '@/app/actions/post';
+import { useRouter } from 'next/navigation';
 
-// MUI imports
-import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid";
-import Card from "@mui/material/Card";
-import CardMedia from "@mui/material/CardMedia";
-import CardContent from "@mui/material/CardContent";
-import CardHeader from "@mui/material/CardHeader";
-import CardActions from "@mui/material/CardActions";
-import IconButton from "@mui/material/IconButton";
-import Avatar from "@mui/material/Avatar";
-import Box from "@mui/material/Box";
-// Icons
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
-import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
-import BookmarkIcon from "@mui/icons-material/Bookmark";
-
-// Server action import
-import { fetchPosts } from "@/app/actions/post";
-import { togglePostLike } from "@/app/actions/like";
-
-// Post interface
+// Define the Post type
 interface Post {
   id: string;
   userId: string;
+  userName: string;
+  userImage?: string | null;
   imageUrl: string;
   caption?: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  user: {
-    name: string | null;
-    image?: string | null;
-  };
+  createdAt: string | Date;
   likeCount: number;
   isLikedByUser: boolean;
 }
 
+// Define the session user type
 interface SessionUser {
   id: string;
   name?: string | null;
@@ -50,13 +29,7 @@ interface SessionUser {
   image?: string | null;
 }
 
-// Interface for optimistic updates
-interface OptimisticLikeUpdate {
-  isLiked: boolean;
-  likeCount: number;
-}
-
-// Interface for togglePostLike response
+// Define the toggle like response type
 interface ToggleLikeResponse {
   success: boolean;
   liked?: boolean;
@@ -64,319 +37,289 @@ interface ToggleLikeResponse {
   error?: string;
 }
 
-const PostsView = () => {
+export default function PostsView() {
   const { data: session, status } = useSession();
   const [posts, setPosts] = useState<Post[]>([]);
-  const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
-  const [expandedCaptions, setExpandedCaptions] = useState<Set<string>>(new Set());
-  const [likeUpdates, setLikeUpdates] = useState<Map<string, OptimisticLikeUpdate>>(new Map());
-  const [processingLikes, setProcessingLikes] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [processingLikes, setProcessingLikes] = useState<Record<string, boolean>>({});
+  const [expandedCaptions, setExpandedCaptions] = useState<Record<string, boolean>>({});
+  const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const router = useRouter();
+
+  // Get the user ID from the session
+  const userId = (session?.user as SessionUser | undefined)?.id;
 
   useEffect(() => {
     const loadPosts = async () => {
       try {
-        const userId = (session?.user as SessionUser | undefined)?.id;
-        console.log("Loading posts with user ID:", userId);
-        const fetchedPosts: Post[] = await fetchPosts(userId);
+        setLoading(true);
+        
+        // Fetch posts with the current user ID to get like status
+        const fetchedPosts = await fetchPosts(userId);
         console.log("Fetched posts:", fetchedPosts);
-        setPosts(fetchedPosts);
-        // Reset optimistic updates when posts are loaded
-        setLikeUpdates(new Map());
+        
+        // Transform the fetched posts to match our Post interface
+        const transformedPosts = fetchedPosts.map((post: any) => ({
+          id: post.id,
+          userId: post.userId,
+          userName: post.user?.name || 'Unknown',
+          userImage: post.user?.image,
+          imageUrl: post.imageUrl,
+          caption: post.caption,
+          createdAt: post.createdAt,
+          likeCount: post.likeCount,
+          isLikedByUser: post.isLikedByUser
+        }));
+        
+        setPosts(transformedPosts);
+        
+        // Check which posts are liked by the current user
+        if (userId) {
+          const postIds = transformedPosts.map(post => post.id);
+          const likedPostIds = await checkLikedPosts(userId, postIds);
+          console.log("Liked post IDs:", likedPostIds);
+          setLikedPosts(likedPostIds);
+        }
       } catch (error) {
-        console.error("Failed to fetch posts:", error);
+        console.error("Error loading posts:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (status !== "loading") {
-      loadPosts();
-    }
-  }, [session?.user, status]);
-
-  // Get the current like state for a post (considering optimistic updates)
-  const getPostLikeState = (post: Post): { isLiked: boolean; likeCount: number } => {
-    const update = likeUpdates.get(post.id);
-    if (update) {
-      return {
-        isLiked: Boolean(update.isLiked),
-        likeCount: update.likeCount
-      };
-    }
-    return {
-      isLiked: post.isLikedByUser,
-      likeCount: post.likeCount
-    };
-  };
+    loadPosts();
+  }, [userId]);
 
   const handleLike = async (postId: string) => {
-    const userId = (session?.user as SessionUser | undefined)?.id;
+    if (!userId) return;
     
-    if (!userId || processingLikes.has(postId)) {
-      return;
-    }
-
     try {
-      // Mark this post as processing a like
-      setProcessingLikes((prevSet) => {
-        const newSet = new Set(prevSet);
-        newSet.add(postId);
-        return newSet;
-      });
+      setProcessingLikes(prev => ({ ...prev, [postId]: true }));
       
-      // Find the current post
+      // Find the post
       const post = posts.find(p => p.id === postId);
       if (!post) return;
       
-      // Get current state
-      const currentState = getPostLikeState(post);
+      // Optimistic update
+      const isCurrentlyLiked = post.isLikedByUser;
       
-      // Set optimistic update (toggle the current state)
-      const newIsLiked = !currentState.isLiked;
-      const newLikeCount = currentState.likeCount + (newIsLiked ? 1 : -1);
+      setPosts(prevPosts => 
+        prevPosts.map(p => {
+          if (p.id === postId) {
+            return {
+              ...p,
+              likeCount: isCurrentlyLiked ? p.likeCount - 1 : p.likeCount + 1,
+              isLikedByUser: !isCurrentlyLiked
+            };
+          }
+          return p;
+        })
+      );
       
-      setLikeUpdates((prevMap) => {
-        const newMap = new Map(prevMap);
-        newMap.set(postId, {
-          isLiked: newIsLiked,
-          likeCount: newLikeCount
-        });
-        return newMap;
-      });
-      
-      // Call the server action
-      const response: ToggleLikeResponse = await togglePostLike(postId, userId);
-      console.log("Toggle like response:", response);
-      
-      if (response.success) {
-        // Update with the actual server response
-        setLikeUpdates((prevMap) => {
-          const newMap = new Map(prevMap);
-          newMap.set(postId, {
-            isLiked: Boolean(response.liked),
-            likeCount: response.likeCount !== undefined ? response.likeCount : currentState.likeCount
-          });
-          return newMap;
-        });
+      // Update liked posts state
+      if (isCurrentlyLiked) {
+        setLikedPosts(prev => prev.filter(id => id !== postId));
       } else {
-        console.error("Failed to toggle like:", response.error);
+        setLikedPosts(prev => [...prev, postId]);
+      }
+      
+      // Actual API call
+      console.log(`Toggling like for post ${postId} by user ${userId}`);
+      const result = await toggleLike(postId, userId) as ToggleLikeResponse;
+      console.log("Toggle like result:", result);
+      
+      if (!result.success) {
+        // Revert optimistic update if failed
+        setPosts(prevPosts => 
+          prevPosts.map(p => {
+            if (p.id === postId) {
+              return {
+                ...p,
+                likeCount: isCurrentlyLiked ? p.likeCount + 1 : p.likeCount - 1,
+                isLikedByUser: isCurrentlyLiked
+              };
+            }
+            return p;
+          })
+        );
         
-        // If there was an error, revert the optimistic update
-        setLikeUpdates((prevMap) => {
-          const newMap = new Map(prevMap);
-          newMap.delete(postId);
-          return newMap;
-        });
+        // Revert liked posts state
+        if (isCurrentlyLiked) {
+          setLikedPosts(prev => [...prev, postId]);
+        } else {
+          setLikedPosts(prev => prev.filter(id => id !== postId));
+        }
+      } else if (result.likeCount !== undefined) {
+        // Update with the actual like count from the server
+        setPosts(prevPosts => 
+          prevPosts.map(p => {
+            if (p.id === postId) {
+              return {
+                ...p,
+                likeCount: result.likeCount!
+              };
+            }
+            return p;
+          })
+        );
       }
     } catch (error) {
       console.error("Error toggling like:", error);
-      
-      // Revert optimistic update on error
-      setLikeUpdates((prevMap) => {
-        const newMap = new Map(prevMap);
-        newMap.delete(postId);
-        return newMap;
-      });
     } finally {
-      // Mark this post as no longer processing a like
-      setProcessingLikes((prevSet) => {
-        const newSet = new Set(prevSet);
-        newSet.delete(postId);
-        return newSet;
-      });
+      setProcessingLikes(prev => ({ ...prev, [postId]: false }));
     }
   };
 
-  const handleSave = (postId: string) => {
-    setSavedPosts(prev => {
-      const newSaved = new Set(prev);
-      if (newSaved.has(postId)) {
-        newSaved.delete(postId);
-      } else {
-        newSaved.add(postId);
-      }
-      return newSaved;
-    });
+  const toggleCaption = (postId: string) => {
+    setExpandedCaptions(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }));
   };
 
-  const toggleCaption = (postId: string) => {
-    setExpandedCaptions(prev => {
-      const newExpanded = new Set(prev);
-      if (newExpanded.has(postId)) {
-        newExpanded.delete(postId);
-      } else {
-        newExpanded.add(postId);
-      }
-      return newExpanded;
-    });
+  const formatTimeAgo = (date: string | Date) => {
+    const now = new Date();
+    const postDate = new Date(date);
+    const diffInSeconds = Math.floor((now.getTime() - postDate.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) {
+      return `${diffInSeconds} sekúnd`;
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} ${minutes === 1 ? 'minútu' : minutes < 5 ? 'minúty' : 'minút'}`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} ${hours === 1 ? 'hodinu' : hours < 5 ? 'hodiny' : 'hodín'}`;
+    } else {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} ${days === 1 ? 'deň' : days < 5 ? 'dni' : 'dní'}`;
+    }
   };
+
+  const handleProfileClick = (userId: string) => {
+    router.push(`/profil/${userId}`);
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ maxWidth: 600, mx: 'auto', p: 2 }}>
+        {[1, 2, 3].map((item) => (
+          <Card key={item} sx={{ mb: 4 }}>
+            <CardHeader
+              avatar={<Skeleton variant="circular" width={40} height={40} />}
+              title={<Skeleton variant="text" width="80%" />}
+              subheader={<Skeleton variant="text" width="40%" />}
+            />
+            <Skeleton variant="rectangular" height={300} />
+            <CardContent>
+              <Skeleton variant="text" />
+              <Skeleton variant="text" width="80%" />
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+    );
+  }
 
   return (
     <Container sx={{ mt: 4 }}>
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        Príspevky
-      </Typography>
-      
       <Grid container spacing={2}>
-        {posts.map((post) => {
-          const { isLiked, likeCount } = getPostLikeState(post);
-          const isProcessing = processingLikes.has(post.id);
-          
-          return (
-            <Grid item xs={12} key={post.id}>
-              <Card sx={{ maxWidth: 600, mx: "auto" }}>
+        <Grid item xs={12} md={8} sx={{ mx: 'auto' }}>
+          {posts.length === 0 ? (
+            <Typography variant="h6" align="center" sx={{ my: 4 }}>
+              Žiadne príspevky na zobrazenie
+            </Typography>
+          ) : (
+            posts.map((post) => (
+              <Card key={post.id} sx={{ mb: 4 }}>
                 <CardHeader
                   avatar={
-                    <Avatar
-                      src={post.user.image || undefined}
-                      alt={post.user.name || "User"}
-                    />
+                    <Avatar 
+                      src={post.userImage || undefined} 
+                      alt={post.userName}
+                      onClick={() => handleProfileClick(post.userId)}
+                      sx={{ cursor: 'pointer' }}
+                    >
+                      {post.userName?.charAt(0).toUpperCase() || '?'}
+                    </Avatar>
                   }
-                  title={post.user.name || "Neznámy používateľ"}
-                  sx={{ 
-                    '& .MuiCardHeader-title': { 
-                      fontWeight: 600,
-                      fontSize: '0.95rem'
-                    }
-                  }}
+                  title={
+                    <Typography 
+                      variant="subtitle1" 
+                      sx={{ 
+                        fontWeight: 'bold', 
+                        cursor: 'pointer',
+                        '&:hover': { textDecoration: 'underline' }
+                      }}
+                      onClick={() => handleProfileClick(post.userId)}
+                    >
+                      {post.userName}
+                    </Typography>
+                  }
+                  subheader={`pred ${formatTimeAgo(post.createdAt)}`}
                 />
                 <CardMedia
                   component="img"
                   image={post.imageUrl}
-                  alt={post.caption || "Príspevok bez popisu"}
-                  sx={{
-                    width: "100%",
-                    height: "auto",
-                    maxHeight: "600px",
-                    objectFit: "contain",
-                    bgcolor: "black",
-                  }}
+                  alt="Post image"
+                  sx={{ height: 'auto', maxHeight: 500, objectFit: 'contain' }}
                 />
-                <CardActions disableSpacing sx={{ pt: 1, pb: 0 }}>
-                  <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-                    <Box>
-                      <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleLike(post.id);
-                        }}
-                        style={{ 
-                          background: isLiked ? 'rgba(255, 0, 0, 0.05)' : 'none',
-                          border: '1px solid #ddd',
-                          borderRadius: '4px',
-                          cursor: isProcessing || !session ? 'default' : 'pointer',
-                          padding: '8px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: '8px',
-                          transition: 'all 0.2s ease-in-out',
-                          opacity: isProcessing ? 0.7 : 1
-                        }}
-                        disabled={isProcessing || !session}
-                      >
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          position: 'relative',
-                          width: '24px',
-                          height: '24px'
-                        }}>
-                          {/* Liked icon with transition */}
-                          <FavoriteIcon 
-                            sx={{ 
-                              color: 'red',
-                              position: 'absolute',
-                              opacity: isLiked ? 1 : 0,
-                              transform: isLiked ? 'scale(1)' : 'scale(0.5)',
-                              transition: 'all 0.2s ease-in-out'
-                            }} 
-                          />
-                          {/* Unliked icon with transition */}
-                          <FavoriteBorderIcon 
-                            sx={{ 
-                              position: 'absolute',
-                              opacity: isLiked ? 0 : 1,
-                              transform: isLiked ? 'scale(1.5)' : 'scale(1)',
-                              transition: 'all 0.2s ease-in-out'
-                            }} 
-                          />
-                        </div>
-                        <span style={{ 
-                          marginLeft: '8px',
-                          transition: 'all 0.2s ease-in-out',
-                          fontWeight: isLiked ? 'bold' : 'normal'
-                        }}>
-                          {likeCount}
-                        </span>
-                      </button>
-                      <IconButton sx={{ p: 1 }}>
-                        <ChatBubbleOutlineIcon />
-                      </IconButton>
-                    </Box>
-                    <IconButton onClick={() => handleSave(post.id)} sx={{ p: 1 }}>
-                      {savedPosts.has(post.id) ? (
-                        <BookmarkIcon />
-                      ) : (
-                        <BookmarkBorderIcon />
-                      )}
-                    </IconButton>
-                  </Box>
-                </CardActions>
-                <CardContent sx={{ pt: 1 }}>
+                <CardContent>
                   <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+                    {post.likeCount} {post.likeCount === 1 ? 'like' : 'likes'}
                   </Typography>
                   {post.caption && (
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Typography component="span" sx={{ fontWeight: 'bold' }}>
-                        {post.user.name || "Neznámy používateľ"}
-                      </Typography>
-                      <Typography
-                        component="span"
-                        sx={{
-                          display: 'inline',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
+                    <Typography variant="body2" color="text.secondary">
+                      <Typography 
+                        component="span" 
+                        variant="subtitle2" 
+                        sx={{ 
+                          fontWeight: 'bold', 
+                          mr: 1,
+                          cursor: 'pointer',
+                          '&:hover': { textDecoration: 'underline' }
                         }}
+                        onClick={() => handleProfileClick(post.userId)}
                       >
-                        {expandedCaptions.has(post.id) 
-                          ? post.caption 
-                          : post.caption.length > 100 
-                            ? post.caption.slice(0, 100) + '...'
-                            : post.caption
-                        }
-                        {post.caption.length > 100 && (
-                          <Typography
-                            component="span"
-                            onClick={() => toggleCaption(post.id)}
-                            sx={{
-                              color: 'text.secondary',
-                              cursor: 'pointer',
-                              ml: 1
-                            }}
-                          >
-                            {expandedCaptions.has(post.id) ? 'less' : 'more'}
-                          </Typography>
-                        )}
+                        {post.userName}
                       </Typography>
-                    </Box>
+                      {expandedCaptions[post.id] || post.caption.length <= 100 
+                        ? post.caption 
+                        : `${post.caption.substring(0, 100)}...`}
+                      {post.caption.length > 100 && (
+                        <Button 
+                          size="small" 
+                          onClick={() => toggleCaption(post.id)}
+                          sx={{ ml: 1, p: 0, minWidth: 'auto', textTransform: 'none' }}
+                        >
+                          {expandedCaptions[post.id] ? 'Zobraziť menej' : 'Zobraziť viac'}
+                        </Button>
+                      )}
+                    </Typography>
                   )}
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mt: 1, cursor: 'pointer' }}
-                  >
-                    View all comments
-                  </Typography>
                 </CardContent>
+                <CardActions disableSpacing>
+                  <IconButton 
+                    aria-label="add to favorites" 
+                    onClick={() => handleLike(post.id)}
+                    disabled={!userId || processingLikes[post.id]}
+                    color={post.isLikedByUser ? "error" : "default"}
+                    sx={{ 
+                      transition: 'transform 0.2s',
+                      '&:hover': { transform: 'scale(1.1)' }
+                    }}
+                  >
+                    {post.isLikedByUser ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                  </IconButton>
+                  <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
+                    {post.likeCount}
+                  </Typography>
+                </CardActions>
               </Card>
-            </Grid>
-          );
-        })}
+            ))
+          )}
+        </Grid>
       </Grid>
     </Container>
   );
-};
-
-export default PostsView;
+}
