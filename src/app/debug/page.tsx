@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Container, Typography, Button, Box, Paper, CircularProgress, Divider, Alert } from '@mui/material';
 import { debugPosts, createTestPost } from '@/app/actions/debug';
+import Image from 'next/image';
 
+// Use any type for now to avoid TypeScript errors
+// We can refine these types later when we have more time
 export default function DebugPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
@@ -94,21 +97,24 @@ export default function DebugPage() {
         <Paper sx={{ p: 3, mb: 4, bgcolor: createPostResult.success ? '#e8f5e9' : '#ffebee' }}>
           <Typography variant="h6">{createPostResult.success ? 'Test Post Created' : 'Error Creating Test Post'}</Typography>
           
-          {createPostResult.success ? (
+          {createPostResult.success && createPostResult.post && (
             <Box sx={{ mt: 2 }}>
               <Typography>Post ID: {createPostResult.post.id}</Typography>
               <Typography>User: {createPostResult.post.userName}</Typography>
               <Typography>Caption: {createPostResult.post.caption}</Typography>
               <Typography>Created: {new Date(createPostResult.post.createdAt).toLocaleString()}</Typography>
-              <Box sx={{ mt: 2 }}>
-                <img 
+              <Box sx={{ mt: 2, position: 'relative', width: '100%', height: '300px' }}>
+                <Image 
                   src={createPostResult.post.imageUrl} 
                   alt="Test post" 
-                  style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }} 
+                  fill
+                  style={{ objectFit: 'contain', maxHeight: '300px' }} 
                 />
               </Box>
             </Box>
-          ) : (
+          )}
+          
+          {createPostResult.success === false && createPostResult.error && (
             <Typography color="error">{createPostResult.error}</Typography>
           )}
         </Paper>
@@ -133,14 +139,14 @@ export default function DebugPage() {
               Posts with Missing Data: {results.postsWithMissingData}
             </Typography>
             <Typography variant="subtitle1">
-              Jack Doyle Posts: {results.jackDoylePostCount}
+              Jack Doyle&apos;s Posts: {results.jackDoylePostCount}
             </Typography>
           </Box>
           
           {results.jackDoylePostCount > 0 && (
             <>
               <Divider sx={{ my: 2 }} />
-              <Typography variant="h6" gutterBottom>Jack Doyle's Posts</Typography>
+              <Typography variant="h6" gutterBottom>Jack Doyle&apos;s Posts</Typography>
               
               {results.jackDoylePosts.map((post: any, index: number) => (
                 <Paper key={post.id} sx={{ p: 2, mb: 2, bgcolor: '#e3f2fd' }}>

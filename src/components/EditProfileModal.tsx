@@ -17,6 +17,14 @@ import CloseIcon from '@mui/icons-material/Close';
 import { updateProfile } from '@/app/actions/profile';
 import { useSession } from 'next-auth/react';
 
+// Define a type for the session user with id
+interface SessionUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
 interface EditProfileModalProps {
   open: boolean;
   onClose: () => void;
@@ -101,7 +109,10 @@ export default function EditProfileModal({
   };
 
   const handleSubmit = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user || !('id' in session.user)) return;
+    
+    // Type assertion for session.user
+    const user = session.user as SessionUser;
     
     try {
       setLoading(true);
@@ -130,7 +141,7 @@ export default function EditProfileModal({
       }
       
       // Update profile bio only (image is already updated)
-      const result = await updateProfile(session.user.id, {
+      const result = await updateProfile(user.id, {
         bio
       });
       

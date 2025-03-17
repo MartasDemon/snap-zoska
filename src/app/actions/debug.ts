@@ -2,6 +2,11 @@
 
 import { prisma } from "@/lib/prisma";
 
+// Define types for the debug data
+interface PostWithIssues {
+  id: string;
+}
+
 // Debug function to check all posts in the database
 export async function debugPosts() {
   try {
@@ -32,13 +37,13 @@ export async function debugPosts() {
     
     // Check for posts with missing data
     let postsWithMissingData = 0;
-    const postsWithIssues = [];
+    const postsWithIssues: PostWithIssues[] = [];
     
     const transformedPosts = posts.map(post => {
       const hasIssues = !post.imageUrl || !post.userId;
       if (hasIssues) {
         postsWithMissingData++;
-        postsWithIssues.push(post.id);
+        postsWithIssues.push({ id: post.id });
       }
       
       return {

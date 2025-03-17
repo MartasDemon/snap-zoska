@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { fetchLikedPosts } from '@/app/actions/post';
 
 export async function GET(

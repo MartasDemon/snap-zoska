@@ -1,9 +1,9 @@
 // src/app/profil/[id]/page.tsx
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { 
   Container, 
   Box, 
@@ -47,7 +47,6 @@ interface Post {
 export default function UserProfilePage() {
   const { id } = useParams();
   const { data: session } = useSession();
-  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +55,7 @@ export default function UserProfilePage() {
   const [likedPosts, setLikedPosts] = useState<Post[]>([]);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -71,12 +70,12 @@ export default function UserProfilePage() {
       setUser(userData);
       
       // Check if this is the current user's profile
-      const sessionUserId = session?.user && 'id' in session.user ? session.user.id : null;
+      const sessionUserId = session?.user && 'id' in session.user ? session.user.id as string : undefined;
       const isCurrentUserProfile = sessionUserId === id;
       setIsCurrentUser(isCurrentUserProfile);
       
       // Fetch user's posts
-      const userPosts = await fetchPosts(sessionUserId, id as string);
+      const userPosts = await fetchPosts(sessionUserId, String(id));
       console.log("Fetched user posts:", userPosts);
       setPosts(userPosts);
       
@@ -96,13 +95,13 @@ export default function UserProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, session]);
 
   useEffect(() => {
     if (id) {
       fetchUserData();
     }
-  }, [id, session]);
+  }, [id, session, fetchUserData]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -113,7 +112,6 @@ export default function UserProfilePage() {
   };
 
   const handleProfileUpdated = () => {
-    // Refetch user data after profile update
     fetchUserData();
   };
 
@@ -214,7 +212,7 @@ export default function UserProfilePage() {
           src={user.image || undefined}
           alt={user.name || 'User'}
           imgProps={{
-            onError: (e) => {
+            onError: () => {
               console.log("Profile image failed to load:", user.image);
               // The fallback initial will be shown automatically when the image fails to load
             }
@@ -314,7 +312,7 @@ export default function UserProfilePage() {
           onClose={() => setEditProfileOpen(false)}
           currentBio={user?.profile?.bio || null}
           currentImage={user?.image || null}
-          onProfileUpdated={fetchUserData}
+          onProfileUpdated={handleProfileUpdated}
         />
       )}
     </Container>

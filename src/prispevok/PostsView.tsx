@@ -21,6 +21,21 @@ interface Post {
   isLikedByUser: boolean;
 }
 
+// Define the fetched post type from the server
+interface FetchedPost {
+  id: string;
+  userId: string;
+  user?: {
+    name?: string | null;
+    image?: string | null;
+  };
+  imageUrl: string;
+  caption?: string | null;
+  createdAt: string | Date;
+  likeCount: number;
+  isLikedByUser: boolean;
+}
+
 // Define the session user type
 interface SessionUser {
   id: string;
@@ -38,12 +53,11 @@ interface ToggleLikeResponse {
 }
 
 export default function PostsView() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingLikes, setProcessingLikes] = useState<Record<string, boolean>>({});
   const [expandedCaptions, setExpandedCaptions] = useState<Record<string, boolean>>({});
-  const [likedPosts, setLikedPosts] = useState<string[]>([]);
   const router = useRouter();
 
   // Get the user ID from the session
@@ -59,7 +73,7 @@ export default function PostsView() {
         console.log("Fetched posts:", fetchedPosts);
         
         // Transform the fetched posts to match our Post interface
-        const transformedPosts = fetchedPosts.map((post: any) => ({
+        const transformedPosts = fetchedPosts.map((post: FetchedPost) => ({
           id: post.id,
           userId: post.userId,
           userName: post.user?.name || 'Unknown',
@@ -78,7 +92,6 @@ export default function PostsView() {
           const postIds = transformedPosts.map(post => post.id);
           const likedPostIds = await checkLikedPosts(userId, postIds);
           console.log("Liked post IDs:", likedPostIds);
-          setLikedPosts(likedPostIds);
         }
       } catch (error) {
         console.error("Error loading posts:", error);
@@ -116,13 +129,6 @@ export default function PostsView() {
         })
       );
       
-      // Update liked posts state
-      if (isCurrentlyLiked) {
-        setLikedPosts(prev => prev.filter(id => id !== postId));
-      } else {
-        setLikedPosts(prev => [...prev, postId]);
-      }
-      
       // Actual API call
       console.log(`Toggling like for post ${postId} by user ${userId}`);
       const result = await toggleLike(postId, userId) as ToggleLikeResponse;
@@ -142,13 +148,6 @@ export default function PostsView() {
             return p;
           })
         );
-        
-        // Revert liked posts state
-        if (isCurrentlyLiked) {
-          setLikedPosts(prev => [...prev, postId]);
-        } else {
-          setLikedPosts(prev => prev.filter(id => id !== postId));
-        }
       } else if (result.likeCount !== undefined) {
         // Update with the actual like count from the server
         setPosts(prevPosts => 

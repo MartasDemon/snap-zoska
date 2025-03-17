@@ -5,6 +5,14 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 
+// Define a type for the session user with id
+interface SessionUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
 // Interface for profile update data
 interface ProfileUpdateData {
   bio?: string | null;
@@ -19,8 +27,16 @@ export async function updateProfile(userId: string, data: ProfileUpdateData) {
   try {
     // Verify the user is authorized to update this profile
     const session = await getServerSession(authOptions);
-    if (!session || session.user.id !== userId) {
+    if (!session || !session.user || !('id' in session.user)) {
       console.error("Unauthorized profile update attempt");
+      return { success: false, error: "Unauthorized" };
+    }
+    
+    // Type assertion for session.user
+    const user = session.user as SessionUser;
+    
+    if (user.id !== userId) {
+      console.error("Unauthorized profile update attempt - user ID mismatch");
       return { success: false, error: "Unauthorized" };
     }
     

@@ -11,10 +11,17 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Image from "next/image";
 
+// Define a type for the session user
+interface SessionUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
 const ProfileButton = () => {
   const { data: session } = useSession();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const router = useRouter();
 
@@ -29,7 +36,6 @@ const ProfileButton = () => {
         const img = new window.Image();
         img.onload = () => {
           console.log("Image loaded successfully");
-          setImageLoaded(true);
           setImageError(false);
         };
         img.onerror = () => {
@@ -54,7 +60,8 @@ const ProfileButton = () => {
 
   const handleProfileNav = () => {
     if (session?.user && 'id' in session.user) {
-      router.push(`/profil/${session.user.id}`);
+      const user = session.user as SessionUser;
+      router.push(`/profil/${user.id}`);
     } else {
       router.push("/profil");
     }
@@ -73,6 +80,8 @@ const ProfileButton = () => {
 
   // Determine if we should show the image or fallback
   const showImage = session.user?.image && !imageError;
+  // Type assertion for session.user
+  const user = session.user as SessionUser;
 
   return (
     <IconButton
@@ -88,7 +97,7 @@ const ProfileButton = () => {
         position: 'relative',
       }}
     >
-      {showImage ? (
+      {showImage && user.image ? (
         <Box
           sx={{
             width: 28,
@@ -98,12 +107,12 @@ const ProfileButton = () => {
             position: 'relative',
           }}
         >
-          <img
-            src={session.user.image}
-            alt={session.user?.name || "Profile"}
+          <Image
+            src={user.image}
+            alt={user.name || "Profile"}
+            fill
+            sizes="28px"
             style={{
-              width: '100%',
-              height: '100%',
               objectFit: 'cover',
             }}
             onError={() => setImageError(true)}
@@ -117,8 +126,8 @@ const ProfileButton = () => {
             bgcolor: '#1976d2'
           }}
         >
-          {session.user?.name ? session.user.name.charAt(0).toUpperCase() : 
-           session.user?.email ? session.user.email.charAt(0).toUpperCase() : 'U'}
+          {user.name ? user.name.charAt(0).toUpperCase() : 
+           user.email ? user.email.charAt(0).toUpperCase() : 'U'}
         </Avatar>
       )}
 
@@ -154,10 +163,10 @@ const ProfileButton = () => {
       >
         <Box sx={{ px: 2, py: 1, borderBottom: '1px solid rgba(0, 0, 0, 0.1)' }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-            {session.user?.name || "User"}
+            {user.name || "User"}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
-            {session.user?.email || ""}
+            {user.email || ""}
           </Typography>
         </Box>
         <MenuItem onClick={handleProfileNav}>Zobraziť profil</MenuItem>

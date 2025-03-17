@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { CircularProgress, Container, Typography } from '@mui/material';
+import { CircularProgress, Container } from '@mui/material';
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();

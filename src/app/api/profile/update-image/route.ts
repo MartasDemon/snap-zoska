@@ -3,18 +3,29 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions';
 import { prisma } from '@/lib/prisma';
 
+// Define a type for the session user with id
+interface SessionUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Profile image update API route called');
     
     // Check authentication
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !session.user.id) {
+    if (!session || !session.user || !('id' in session.user)) {
       console.log('Unauthorized profile update attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    console.log('User authenticated:', session.user.email);
+    // Type assertion for session.user
+    const user = session.user as SessionUser;
+    
+    console.log('User authenticated:', user.email);
 
     // Get form data with the file
     const formData = await request.formData();
@@ -47,7 +58,7 @@ export async function POST(request: NextRequest) {
     console.log('Image converted to base64, length:', base64Image.length);
 
     // Update the user's image in the database
-    const userId = session.user.id;
+    const userId = user.id;
     await prisma.user.update({
       where: { id: userId },
       data: { image: base64Image }
